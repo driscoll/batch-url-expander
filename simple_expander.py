@@ -7,6 +7,8 @@ Kevin Driscoll, 2014
 """
 
 from socket import error as SocketError
+import fileinput
+import multiprocessing
 import urllib
 import urllib2
 
@@ -101,3 +103,24 @@ def lengthen(u):
             hops.append(nexturl)
 
     return hops
+
+def multilengthen(q):
+    """Lengthen a list of short URLs
+        Returns a dictionary of short-long key-value pairs
+    """
+    pool = multiprocessing.Pool()
+    for urlchain in pool.imap_unordered(lengthen, q, 1000):
+        yield urlchain
+
+
+if __name__=="__main__":
+
+    # Read list of short URLs
+    shorturls = []
+    for line in fileinput.input():
+        shorturls.append(line)
+
+    # Expand short URLs in parallel
+    # Print short-long pairs as they arrive 
+    for surl, lurl in multilengthen(shorturls):
+        print surl, lurl

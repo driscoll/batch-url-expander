@@ -10,4 +10,4 @@ I have previously used it to clean data extracted from social media sites, lists
 
 The simplest use case looks like this:
 
-$ python -u expander.py short-urls.txt > short-long-urls.csv
+    $ python -u expander.py short-urls.txt > short-long-urls.csv

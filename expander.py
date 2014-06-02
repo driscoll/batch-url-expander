@@ -2,7 +2,7 @@
 """
 Batch URL expander
 
-Kevin Driscoll, 2014
+(c) Kevin Driscoll, 2014
 
 """
 

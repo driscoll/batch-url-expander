@@ -35,19 +35,6 @@ HTTP_REDIRECT_CODES = [
 HTTP_TIMEOUT = 60 
 HTTP_MAX_REDIRECTS = 13
 
-# Known short domains
-SHORT_DOMAINS = []
-fn = "short_domains.txt"
-try:
-    with open(fn, "r") as f:
-        for line in f:
-            SHORT_DOMAINS.append(line.strip())
-except IOError:
-    errmsg = "Error reading list of short domains from {0}.\n".format(fn)
-    sys.stderr.write(errmsg)
-    pass
-
-
 class LazyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, header, newurl):
         """On redirect, raise the HTTPError and die
@@ -56,6 +43,12 @@ class LazyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 
 
 # URL utilities
+
+SHORT_DOMAINS = []
+fn = "short_domains.txt"
+with open(fn, "r") as f:
+    for line in f:
+        SHORT_DOMAINS.append(line.strip())
 
 def extract_domain(u):
     """Attempt to extract a domain name from u

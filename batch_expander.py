@@ -41,7 +41,8 @@ class LazyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
 
 def lengthen(u):
     """Return short_long dict of all URLs
-    between u and its ultimate location"""
+        between u and its ultimate location
+    """
     
     # For description of error handling, see:
     # http://www.voidspace.org.uk/python/articles/urllib2.shtml#httperror
@@ -105,8 +106,9 @@ def lengthen(u):
     return hops
 
 def multilengthen(q):
-    """Lengthen a list of short URLs
+    """Lengthen a list of short URLs in parallel
         Returns a dictionary of short-long key-value pairs
+        Note: output order will not match input order
     """
     pool = multiprocessing.Pool()
     for urlchain in pool.imap_unordered(lengthen, q, 1000):
@@ -118,9 +120,12 @@ if __name__=="__main__":
     # Read list of short URLs
     shorturls = []
     for line in fileinput.input():
-        shorturls.append(line)
+        shorturls.append(line.strip())
 
     # Expand short URLs in parallel
     # Print short-long pairs as they arrive 
     for surl, lurl in multilengthen(shorturls):
-        print surl, lurl
+        output = surl
+        output += ','
+        output += lurl
+        print output

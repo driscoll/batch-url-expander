@@ -2,6 +2,8 @@
 """
 Batch URL expander
 
+Note: Speed up messy data by expanding only known short URLs 
+
 (c) Kevin Driscoll, 2014
 
 """
@@ -33,11 +35,55 @@ HTTP_REDIRECT_CODES = [
 HTTP_TIMEOUT = 60 
 HTTP_MAX_REDIRECTS = 13
 
+# Known short domains
+SHORT_DOMAINS = []
+fn = "short_domains.txt"
+try:
+    with open(fn, "r") as f:
+        for line in f:
+            SHORT_DOMAINS.append(line.strip())
+except IOError:
+    errmsg = "Error reading list of short domains from {0}.\n".format(fn)
+    sys.stderr.write(errmsg)
+    pass
+
+
 class LazyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, header, newurl):
         """On redirect, raise the HTTPError and die
         """
         return None
+
+
+# URL utilities
+
+def extract_domain(u):
+    """Attempt to extract a domain name from u
+        Returns string or None
+    """
+    domain_re = r'^(www.)?([^/]*)/?.*'
+    if u.startswith('http'):
+        brief = u.split('://', 1)[-1]
+    else:   
+        brief = u
+
+    m = re.search(domain_re, brief)
+
+    if m:
+        return m.group(2)
+    else:
+        return None
+
+def is_short_url(u):
+    """Compare domain name against list of known short domains
+        Returns True or False
+    """
+    domain = extract_domain(u)
+    return (domain in SHORT_DOMAINS)
+        
+
+
+# Lengthening functions
 
 def lengthen(u):
     """Return short_long dict of all URLs
@@ -113,6 +159,7 @@ def multilengthen(q):
     pool = multiprocessing.Pool()
     for urlchain in pool.imap_unordered(lengthen, q, 1000):
         yield urlchain
+
 
 
 if __name__=="__main__":

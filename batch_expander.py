@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Simple URL expander
+Batch URL expander
 
 Kevin Driscoll, 2014
 

@@ -11,6 +11,7 @@ Note: Speed up messy data by expanding only known short URLs
 from socket import error as SocketError
 import fileinput
 import multiprocessing
+import re
 import urllib
 import urllib2
 
@@ -32,7 +33,7 @@ HTTP_REDIRECT_CODES = [
 # HTTP Timeout (in seconds)
 # For more info on socket timeout:
 # http://www.voidspace.org.uk/python/articles/urllib2.shtml#sockets-and-layers
-HTTP_TIMEOUT = 60 
+HTTP_TIMEOUT = 5 # 60 
 HTTP_MAX_REDIRECTS = 13
 
 class LazyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
@@ -98,6 +99,7 @@ def lengthen(u):
     # Follow all redirects, adding URLs to hops 
     while nexturl and (len(hops) < HTTP_MAX_REDIRECTS):
         request = urllib2.Request(nexturl)
+        request.add_header('User-agent', USER_AGENT)
         try:
             r = opener.open(request, timeout=HTTP_TIMEOUT)
         except urllib2.HTTPError as err:
@@ -123,15 +125,15 @@ def lengthen(u):
             # The server sent an unfamiliar status code 
             # Not caught by urllib2, see:
             # http://bugs.python.org/issue8823
-            print err
+            print err 
             nexturl = None
         except urllib2.httplib.InvalidURL as err:
             # Usually happens when there is a colon
             # but no port number
             print err
             nexturl = None
-        except SocketError as e: 
-            print e 
+        except SocketError as err: 
+            print err
             nexturl = None
         else:
             # Ultimate destination reached
@@ -146,7 +148,7 @@ def lengthen(u):
 
 def multilengthen(q):
     """Lengthen a list of short URLs in parallel
-        Returns a dictionary of short-long key-value pairs
+        Yields lists with chains of URL "hops" 
         Note: output order will not match input order
     """
     pool = multiprocessing.Pool()
@@ -154,18 +156,19 @@ def multilengthen(q):
         yield urlchain
 
 
-
 if __name__=="__main__":
 
     # Read list of short URLs
     shorturls = []
     for line in fileinput.input():
-        shorturls.append(line.strip())
+        url = line.strip()
+        if is_short_url(url):
+            shorturls.append(url)
 
     # Expand short URLs in parallel
     # Print short-long pairs as they arrive 
-    for surl, lurl in multilengthen(shorturls):
-        output = surl
-        output += ','
-        output += lurl
+    for urlchain in multilengthen(shorturls):
+        output = urlchain[0] 
+        output += '\t'
+        output += urlchain[-1]
         print output
